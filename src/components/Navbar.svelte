@@ -3,7 +3,8 @@
         <div class="navbar-brand">
             <a class="navbar-item is-size-4" href="/">
                 <span class="icon-text">
-                    <span><strong>Fox in the Woods Poker Tracker</strong></span>
+                    <span class="is-hidden-desktop"><strong>Poker Tracker</strong></span>
+                    <span class="is-hidden-touch"><strong>Fox in the Woods Poker Tracker</strong></span>
                 </span>
             </a>
       
