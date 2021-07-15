@@ -1,9 +1,9 @@
-<nav class="navbar is-fixed-top" role="navigation" aria-label="main navigation">
+<nav class="navbar is-fixed-top is-info" role="navigation" aria-label="main navigation">
     <div class="container">
         <div class="navbar-brand">
             <a class="navbar-item is-size-4" href="/">
                 <span class="icon-text">
-                    <span><strong>Svelte-Bulma-Boilerplate</strong></span>
+                    <span><strong>Fox in the Woods Poker Tracker</strong></span>
                 </span>
             </a>
       
@@ -28,37 +28,36 @@
 </nav>
 
 <script>
-    let links = [
-        {
-            url: "#/",
-            text: "Home"
-        }
-    ]
-    
+  let links = [
+      {
+        url: "#/",
+        text: "Home"
+      },
+      {
+        url: "#/about",
+        text: "About"
+      }
+  ]
+  
 
-    // Hanlde the menu icon
-    document.addEventListener('DOMContentLoaded', () => {
+  // Hanlde the menu icon
+  document.addEventListener('DOMContentLoaded', () => {
 
 		// Get all "navbar-burger" elements
-		const navbarBurgers = Array.prototype.slice.call(document.querySelectorAll('.navbar-burger'), 0);
+    const burger = document.querySelector('.navbar-burger');
+    const links = document.querySelector('.navbar-menu');
+    const items = document.querySelectorAll('.navbar-item');
 
-		// Check if there are any navbar burgers
-		if (navbarBurgers.length > 0) {
+    burger.addEventListener('click', () => {
+      links.classList.toggle('is-active');
+    })
 
-			// Add a click event on each of them
-			navbarBurgers.forEach( el => {
-				el.addEventListener('click', () => {
-
-					// Get the target from the "data-target" attribute
-					const target = el.dataset.target;
-					const target_element = document.getElementById(target);
-
-					// Toggle the "is-active" class on both the "navbar-burger" and the "navbar-menu"
-					el.classList.toggle('is-active');
-					target_element.classList.toggle('is-active');
-
-				});
-			});
-		}
+    items.forEach(i => {
+      i.addEventListener('click', () => {
+        if(links.classList.contains('is-active')) {
+          links.classList.toggle('is-active');
+        }
+      })
+    })
 	});
 </script>

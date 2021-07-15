@@ -1,0 +1,4 @@
+pymongo==3.11.4
+dnspython==2.1.0
+selenium==3.141.0
+PyVirtualDisplay==2.2
