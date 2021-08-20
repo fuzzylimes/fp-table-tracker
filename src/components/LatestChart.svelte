@@ -11,12 +11,13 @@
     $: latest && buildChart(latest);
 
     const buildChart = (latest) => {
-        labels = Object.keys(latest.games).map(v => v.replaceAll('_', '.'));
+        labels = Object.keys(latest.games);
         tables = labels.map(e => {
-            return latest.games[e].reduce((t,v) => {return t + v.tableCount}, 0);
+            return latest.games[e].reduce((t,v) => {
+                return t + v.tableCount;
+            }, 0);
         });
-        // labels = ['a','b','c','d']
-        // tables = [1,1,1,1];
+        labels = labels.map(v => v.replaceAll('_', '.'));
         const data = {
             labels: labels,
             datasets: [{
