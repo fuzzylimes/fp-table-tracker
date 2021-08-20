@@ -35,6 +35,10 @@
         text: "Home"
       },
       {
+        url: "#/recent",
+        text: "Recent"
+      },
+      {
         url: "#/about",
         text: "About"
       }
