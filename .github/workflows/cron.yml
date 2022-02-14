@@ -9,10 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Fetch latest data
-        env:
-          FETCH_URL: ${{ secrets.FETCH_URL }}
-          SECRET_KEY: ${{ secrets.SECRET_KEY }}
         run: |
           curl --request PUT \
-          --url '$FETCH_URL' \
-          --header 'auth: $SECRET_KEY'
+          --url '${{ secrets.FETCH_URL }}' \
+          --header 'auth: ${{ secrets.SECRET_KEY }}'
