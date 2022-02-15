@@ -81,6 +81,7 @@ fn parse(html: &str) -> Record {
         .duration_since(UNIX_EPOCH)
         .unwrap()
         .as_secs();
+    let ts = (ts / 60 / 30) * 60 * 30; // get nearest 30 minutes
     let mut games: HashMap<String, Vec<Game>> = HashMap::new();
     let mut table_count: u8 = 0;
 
