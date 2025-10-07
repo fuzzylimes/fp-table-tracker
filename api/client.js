@@ -13,7 +13,7 @@ class Client {
         }
 
         const uri = `mongodb+srv://${mongoUser}:${mongoPass}@${mongoUrl}/${mongoDb}`;
-        const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+        const client = new MongoClient(uri);
         return client;
     }
 }
