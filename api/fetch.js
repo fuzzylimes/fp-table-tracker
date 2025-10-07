@@ -19,7 +19,7 @@ export default async function handler(req, res) {
     // Parse and transform the data
     const record = parseData(apiData);
 
-    console.log('Record:', record);
+    console.log('Record:', JSON.stringify(record, null, 2));
 
     // Write to MongoDB
     await writeToMongo(record);
@@ -107,6 +107,8 @@ async function writeToMongo(record) {
     const collection = database.collection(mongoCollection);
 
     await collection.insertOne(record);
+  } catch (e) {
+    console.error('Error writing to mongo', e);
   } finally {
     await client.close();
   }
