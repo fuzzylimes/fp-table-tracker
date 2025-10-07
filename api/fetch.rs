@@ -1,6 +1,5 @@
 use http::{Method, StatusCode};
 use mongodb::{bson::doc, sync::Client};
-use scraper::{Html, Selector};
 use serde::{Deserialize, Serialize};
 use std::error::Error;
 use std::{
@@ -9,6 +8,42 @@ use std::{
     time::{SystemTime, UNIX_EPOCH},
 };
 use vercel_lambda::{error::VercelError, lambda, IntoResponse, Request, Response};
+
+// Struct for the API response
+#[derive(Debug, Deserialize)]
+struct ApiResponse {
+    success: bool,
+    markup: String,
+    data: Vec<PokerTable>,
+    instance_id: String,
+    paragraph_type: String,
+}
+
+// Struct for individual poker table data
+#[derive(Debug, Deserialize)]
+struct PokerTable {
+    name: String,
+    limit: String,
+    #[serde(rename = "numberOfGames")]
+    number_of_games: u8,
+    #[serde(rename = "pockerRoomLocationId")]
+    poker_room_location_id: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct Record {
+    ts: u64,
+    #[serde(rename = "tableCount")]
+    table_count: u8,
+    games: HashMap<String, Vec<Game>>,
+}
+
+#[derive(Default, Clone, Debug, Serialize, Deserialize)]
+struct Game {
+    #[serde(rename = "tableCount")]
+    table_count: u8,
+    blinds: String,
+}
 
 // Start the runtime with the handler
 fn main() -> Result<(), Box<dyn Error>> {
@@ -30,8 +65,8 @@ fn handler(request: Request) -> Result<impl IntoResponse, VercelError> {
         return Ok(bad_request);
     }
 
-    let html = query().unwrap();
-    let res = parse(html.as_str());
+    let api_response = query().unwrap();
+    let res = parse(&api_response);
     println!("{:?}", res);
     write_to_mongo(&res);
 
@@ -44,67 +79,56 @@ fn handler(request: Request) -> Result<impl IntoResponse, VercelError> {
     Ok(response)
 }
 
-fn query() -> Result<String, ureq::Error> {
-    let body: String = ureq::get("https://www.foxwoods.com/casino/choose/poker/CurrentPokerTablesBlock_GetCurrentPokerTables")
-        .set("Host", " www.foxwoods.com")
+fn query() -> Result<ApiResponse, Box<dyn std::error::Error>> {
+    let payload = serde_json::json!({
+        "instance_id": "poker-tables-295-68e4eee4cd552",
+        "paragraph_id": "295"
+    });
+
+    let body: String = ureq::post("https://foxwoods.com/api/poker-tables/load")
+        .set("Host", "foxwoods.com")
         .set(
             "User-Agent",
-            " Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:96.0) Gecko/20100101 Firefox/96.0",
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:96.0) Gecko/20100101 Firefox/96.0",
         )
-        .set("Accept", " text/html, */*; q=0.01")
-        .set("Accept-Language", " en-US,en;q=0.5")
-        .set("Accept-Encoding", " gzip, deflate, br")
-        .set("X-Requested-With", " XMLHttpRequest")
-        .set("Referer", " https://www.foxwoods.com/casino/choose/poker/")
-        .call()?
+        .set("Accept", "*/*")
+        .set("Accept-Language", "en-US,en;q=0.5")
+        .set("Accept-Encoding", "gzip, deflate, br, zstd")
+        .set("X-Requested-With", "XMLHttpRequest")
+        .set("Referer", "https://www.foxwoods.com/")
+        .set("Content-Type", "application/json")
+        .send_json(&payload)?
         .into_string()?;
-    Ok(body)
+
+    let api_response: ApiResponse = serde_json::from_str(&body)?;
+    Ok(api_response)
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-struct Record {
-    ts: u64,
-    #[serde(rename = "tableCount")]
-    table_count: u8,
-    games: HashMap<String, Vec<Game>>,
-}
-
-#[derive(Default, Clone, Debug, Serialize, Deserialize)]
-struct Game {
-    #[serde(rename = "tableCount")]
-    table_count: u8,
-    blinds: String,
-}
-
-fn parse(html: &str) -> Record {
+fn parse(api_response: &ApiResponse) -> Record {
     let ts = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .unwrap()
         .as_secs();
     let ts = (ts / 60 / 30) * 60 * 30; // get nearest 30 minutes
+
     let mut games: HashMap<String, Vec<Game>> = HashMap::new();
     let mut table_count: u8 = 0;
 
-    let parsed = Html::parse_fragment(html);
-    let tr_selector = Selector::parse("tr").unwrap();
-    let td_selector = Selector::parse("td").unwrap();
-
-    for tr in parsed.select(&tr_selector).skip(1) {
-        let tds = tr
-            .select(&td_selector)
-            .map(|row| row.inner_html())
-            .collect::<Vec<_>>();
-        let ng = Game {
-            table_count: (&tds[0][1..&tds[0].len() - 1]).parse().unwrap(),
-            blinds: tds[1].clone(),
+    // Process the data array directly
+    for table in &api_response.data {
+        let game = Game {
+            table_count: table.number_of_games,
+            blinds: table.limit.clone(),
         };
-        table_count += ng.table_count;
+        table_count += game.table_count;
 
-        let key = tds[2].replace("   ", " ");
-        if games.contains_key(&key) {
-            games.get_mut(&key).unwrap().push(ng);
+        // Clean up the game name (remove extra spaces)
+        let key = table.name.replace("   ", " ");
+
+        if let Some(game_list) = games.get_mut(&key) {
+            game_list.push(game);
         } else {
-            games.insert(key, vec![ng]);
+            games.insert(key, vec![game]);
         }
     }
 
