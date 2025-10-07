@@ -12,11 +12,11 @@ use vercel_lambda::{error::VercelError, lambda, IntoResponse, Request, Response}
 // Struct for the API response
 #[derive(Debug, Deserialize)]
 struct ApiResponse {
-    success: bool,
-    markup: String,
+    // success: bool,
+    // markup: String,
     data: Vec<PokerTable>,
-    instance_id: String,
-    paragraph_type: String,
+    // instance_id: String,
+    // paragraph_type: String,
 }
 
 // Struct for individual poker table data
@@ -26,8 +26,8 @@ struct PokerTable {
     limit: String,
     #[serde(rename = "numberOfGames")]
     number_of_games: u8,
-    #[serde(rename = "pockerRoomLocationId")]
-    poker_room_location_id: String,
+    // #[serde(rename = "pockerRoomLocationId")]
+    // poker_room_location_id: String,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
