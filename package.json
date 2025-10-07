@@ -22,7 +22,7 @@
     "svelte-spa-router": "^3.1.0"
   },
   "dependencies": {
-    "mongodb": "^3.6.10",
+    "mongodb": "^6.20.0",
     "node-fetch": "^2.6.1",
     "sirv-cli": "^1.0.0"
   }
